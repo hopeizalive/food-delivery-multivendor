@@ -1,0 +1,13 @@
+appId: com.enatega.multivendor
+---
+- tapOn: "VIEW YOUR CART"
+- extendedWaitUntil:
+    visible:
+      id: "customer-cart-checkout-button"
+    timeout: 15000
+- tapOn:
+    id: "customer-cart-checkout-button"
+- extendedWaitUntil:
+    visible:
+      id: "customer-place-order-button"
+    timeout: 15000

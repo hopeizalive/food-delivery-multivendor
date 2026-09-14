@@ -1,0 +1,7 @@
+appId: com.enatega.multivendor
+---
+- tapOn:
+    id: "customer-place-order-button"
+- extendedWaitUntil:
+    visible: "Track Order"
+    timeout: 20000

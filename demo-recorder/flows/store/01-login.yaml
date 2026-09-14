@@ -1,0 +1,15 @@
+appId: multivendor.enatega.restaurant
+---
+# Prerequisite (manual, not scripted): app already open on its Login screen.
+# Same dev-client connect caveat as the customer app - see
+# flows/customer/01-login.yaml for why this isn't scripted.
+- assertVisible:
+    id: "store-login-username-input"
+- tapOn:
+    id: "store-login-username-input"
+- inputText: "store-demo"
+- tapOn:
+    id: "store-login-password-input"
+- inputText: "demo1234"
+- tapOn:
+    id: "store-login-submit-button"

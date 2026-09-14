@@ -1,0 +1,55 @@
+appId: com.enatega.multivendor
+---
+# Prerequisite (manual, not scripted): the customer app must already be
+# open and showing the Discovery/Home screen before running this flow.
+# Getting there from a cold app requires connecting the Expo dev-client to
+# Metro, which shows an unpredictable developer-menu overlay ("Continue")
+# that can pop up at any point during the connect handshake - a human
+# dismisses it in about two seconds, but it cost many automated retries to
+# handle reliably. Splitting it out: reach Discovery by hand, then trigger
+# this flow, which only touches the well-tested reliable part (Profile tab
+# -> Continue with Email -> Login). Once the apps move to preview/production
+# builds (no dev-client at all), this manual step goes away entirely.
+- assertVisible: "Discovery"
+- tapOn: "Profile"
+- extendedWaitUntil:
+    visible: "Continue with Email"
+    timeout: 15000
+- tapOn: "Continue with Email"
+- extendedWaitUntil:
+    visible:
+      id: "customer-login-email-input"
+    timeout: 15000
+- tapOn:
+    id: "customer-login-email-input"
+- inputText: "demo@enatega.com"
+- tapOn:
+    id: "customer-login-continue-button"
+# The tap above sometimes doesn't register/take effect on the first try
+# (confirmed - screen still showed the email step after a "completed" tap,
+# a second manual tap on the same button worked immediately) - retry it
+# rather than trust one tap blindly.
+- extendedWaitUntil:
+    visible:
+      id: "customer-login-password-input"
+    timeout: 8000
+    optional: true
+- tapOn:
+    id: "customer-login-continue-button"
+    optional: true
+- extendedWaitUntil:
+    visible:
+      id: "customer-login-password-input"
+    timeout: 15000
+- tapOn:
+    id: "customer-login-password-input"
+- inputText: "demo1234"
+- tapOn:
+    id: "customer-login-continue-button"
+- extendedWaitUntil:
+    visible: "Discovery"
+    timeout: 8000
+    optional: true
+- tapOn:
+    id: "customer-login-continue-button"
+    optional: true

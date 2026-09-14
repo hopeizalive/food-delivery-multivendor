@@ -1,0 +1,7 @@
+appId: com.enatega.multivendor
+---
+- tapOn: "Demo Bistro"
+- extendedWaitUntil:
+    visible:
+      id: "menu-food-item-food-1"
+    timeout: 20000

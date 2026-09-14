@@ -1,0 +1,19 @@
+appId: multivendor.enatega.restaurant
+---
+# Assumes a live order already exists (the customer scene's place-order flow
+# has run first) and the store app is on its order list, logged in.
+- extendedWaitUntil:
+    visible:
+      id: "store-accept-order-button"
+    timeout: 20000
+- tapOn:
+    id: "store-accept-order-button"
+# Opens the "Set Preparation Time" bottom sheet - tapping Done (not "Accept
+# and Print") is what actually fires the acceptOrder mutation, confirmed
+# manually earlier this session.
+- extendedWaitUntil:
+    visible:
+      id: "store-accept-order-done-button"
+    timeout: 10000
+- tapOn:
+    id: "store-accept-order-done-button"

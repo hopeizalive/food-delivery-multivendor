@@ -1,0 +1,15 @@
+appId: com.enatega.multivendor
+---
+- tapOn:
+    id: "menu-food-item-food-1"
+- extendedWaitUntil:
+    visible:
+      id: "item-detail-add-to-cart-button"
+    timeout: 15000
+- tapOn:
+    id: "item-detail-add-to-cart-button"
+# Successful add navigates back to the restaurant menu automatically, where
+# the floating cart bar then appears.
+- extendedWaitUntil:
+    visible: "VIEW YOUR CART"
+    timeout: 15000
