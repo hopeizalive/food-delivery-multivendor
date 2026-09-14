@@ -79,7 +79,7 @@ module.exports = {
       'expo-font',
       'expo-secure-store'
     ],
-    platforms: ['ios', 'android'],
+    platforms: ['ios', 'android', 'web'],
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.enatega.multirider',
