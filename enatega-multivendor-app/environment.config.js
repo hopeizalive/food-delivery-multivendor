@@ -92,6 +92,26 @@ const normalizeEnvironment = (env) => {
   return 'development'
 }
 
+// Local/demo override for multivendor mode, mirroring the single-vendor
+// override below - unset in a normal build, so production keeps hitting
+// the real aws-server-v2 host untouched.
+const getMultiEnvOverrides = () => {
+  const graphqlUrl = process.env.EXPO_PUBLIC_GRAPHQL_URL
+  const wsGraphqlUrl = process.env.EXPO_PUBLIC_WS_GRAPHQL_URL
+  const serverRestUrl = process.env.EXPO_PUBLIC_SERVER_REST_URL
+
+  if (graphqlUrl && wsGraphqlUrl && serverRestUrl) {
+    return {
+      GRAPHQL_URL: graphqlUrl,
+      WS_GRAPHQL_URL: wsGraphqlUrl,
+      SERVER_URL: graphqlUrl,
+      SERVER_REST_URL: serverRestUrl
+    }
+  }
+
+  return null
+}
+
 const getEnvironmentConfig = (env, mode = APP_MODES.MULTI) => {
   const environment = normalizeEnvironment(env)
 
@@ -101,6 +121,7 @@ const getEnvironmentConfig = (env, mode = APP_MODES.MULTI) => {
 
   return {
     ...MULTI_ENV_CONFIG[environment],
+    ...(getMultiEnvOverrides() || {}),
     PUBLIC_ACCESS_REQUIRED: true,
     SINGLE_VENDOR_ENABLED: getSingleVendorConfig().SINGLE_VENDOR_ENABLED
   }

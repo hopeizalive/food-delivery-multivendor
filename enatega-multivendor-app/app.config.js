@@ -32,7 +32,7 @@ module.exports = () => {
     description:
       "Enatega is a starter kit food ordering app built in React Native using Expo for IOS and Android. It's made keeping good aesthetics in mind as well keeping the best coding practices in mind. Its fully customisable to easily help you in your next food delivery project. https://market.nativebase.io/view/react-native-food-delivery-backend-app",
     slug: 'enategamultivendor',
-    owner: 'ninjas_code',
+    owner: 'hopeizalive',
     experiments: {
       buildCacheProvider: 'eas'
     },
@@ -227,14 +227,14 @@ module.exports = () => {
         riderResourceName: 'enatega_rider'
       },
       eas: {
-        projectId: '331d4e5b-b12a-434a-92ec-d6d283dc0e46'
+        projectId: '6a89b89d-5905-4d80-b863-bbf4db4f3b89'
       }
     },
     runtimeVersion: {
       policy: 'sdkVersion'
     },
     updates: {
-      url: 'https://u.expo.dev/331d4e5b-b12a-434a-92ec-d6d283dc0e46'
+      url: 'https://u.expo.dev/6a89b89d-5905-4d80-b863-bbf4db4f3b89'
     }
   }
 }

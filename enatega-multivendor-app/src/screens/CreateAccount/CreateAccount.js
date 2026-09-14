@@ -20,6 +20,7 @@ import { dismissSessionExpiredModal } from '../../utils/session'
 import { gql, useApolloClient } from '@apollo/client'
 import { useAppMode } from '../../mode/AppModeContext'
 import { APP_MODES } from '../../mode/constants'
+import { getModeHomeRoute } from '../../mode/navigation'
 
 const APPLE_AUTH_NONCE = gql`
   query AppleAuthNonce {
@@ -177,7 +178,10 @@ const CreateAccount = (props) => {
   )
 
   const renderGuestButton = () => (
-    <TouchableOpacity activeOpacity={0.7} style={styles(currentTheme).guestButton} onPress={() => navigation.navigate('Discovery')} disabled={props.loadingIcon}>
+    <TouchableOpacity activeOpacity={0.7} style={styles(currentTheme).guestButton} onPress={() => {
+      const route = getModeHomeRoute(mode)
+      navigation.navigate(route.name, route.params)
+    }} disabled={props.loadingIcon}>
       {props.loadingIcon
         ? (
           <Spinner backColor='rgba(0,0,0,0.1)' spinnerColor={currentTheme.main} />

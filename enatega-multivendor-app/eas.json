@@ -19,7 +19,15 @@
       "channel": "staging",
       "distribution": "internal",
       "env": {
-        "APP_ENV": "staging"
+        "APP_ENV": "staging",
+        "EXPO_PUBLIC_VENDOR_MODE": "TOGGLE",
+        "EXPO_PUBLIC_SINGLE_VENDOR_ENABLED": "true",
+        "EXPO_PUBLIC_SINGLE_VENDOR_GRAPHQL_URL": "https://enatega-demo-mock-api.onrender.com/graphql",
+        "EXPO_PUBLIC_SINGLE_VENDOR_WS_GRAPHQL_URL": "wss://enatega-demo-mock-api.onrender.com/graphql",
+        "EXPO_PUBLIC_SINGLE_VENDOR_REST_URL": "https://enatega-demo-mock-api.onrender.com/",
+        "EXPO_PUBLIC_GRAPHQL_URL": "https://enatega-demo-mock-api.onrender.com/graphql",
+        "EXPO_PUBLIC_WS_GRAPHQL_URL": "wss://enatega-demo-mock-api.onrender.com/graphql",
+        "EXPO_PUBLIC_SERVER_REST_URL": "https://enatega-demo-mock-api.onrender.com/"
       },
       "android": {
         "buildType": "apk"
