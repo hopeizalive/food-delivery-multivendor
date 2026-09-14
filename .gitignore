@@ -73,3 +73,14 @@ enatega-multivendor-app/.env
 goodbite-multivendor-app
 **/*service-account*.json
 **/serviceAccountKey*.json
+*.log
+# Debug screenshots taken during manual testing/demo verification (kept locally, not committed)
+/debug-snapshots/
+
+# mock-api lives in its own repo (github.com/hopeizalive/enatega-demo-mock-api) and is
+# deployed separately - kept here on disk for local dev/testing but must never be
+# committed as part of this template project's history.
+/mock-api/
+
+# Editor-local settings, not part of the template project.
+/.vscode/
