@@ -39,7 +39,7 @@
       "expo-audio",
       "expo-video"
     ],
-    "platforms": ["ios", "android"],
+    "platforms": ["ios", "android", "web"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "multivendor.enatega.restaurant",

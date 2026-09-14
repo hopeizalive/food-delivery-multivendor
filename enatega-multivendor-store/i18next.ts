@@ -95,6 +95,6 @@ const initializeLanguage = async (): Promise<void> => {
   }
 };
 
-initializeLanguage();
+export const i18nextReady = initializeLanguage();
 
 export default i18next;

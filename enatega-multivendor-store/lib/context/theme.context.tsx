@@ -52,7 +52,11 @@ export default function AppThemeProvidor({
     const systemTheme = Appearance.getColorScheme();
     const localTheme = await AsyncStorage.getItem("app_theme");
     const theme = localTheme || systemTheme || "dark";
-    Appearance.setColorScheme(theme as app_theme);
+    // react-native-web has no Appearance.setColorScheme implementation yet -
+    // guard it so web doesn't crash on mount. Native behavior is unchanged.
+    if (typeof Appearance.setColorScheme === "function") {
+      Appearance.setColorScheme(theme as app_theme);
+    }
     setCurrentTheme(theme as app_theme);
     setAppTheme(
       theme === "light"

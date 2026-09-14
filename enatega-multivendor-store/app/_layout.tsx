@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import FlashMessage from "react-native-flash-message";
 import "react-native-reanimated";
 
-import "@/i18next";
+import { i18nextReady } from "@/i18next";
 import setupApollo, { disposeApollo } from "@/lib/apollo";
 import { AuthProvider } from "@/lib/context/global/auth.context";
 import { ConfigurationProvider } from "@/lib/context/global/configuration.context";
@@ -33,6 +33,23 @@ function ModeAwareRootLayout() {
     Inter: require("../lib/assets/fonts/Inter.ttf"),
   });
   const [isTokenReady, setIsTokenReady] = useState(false);
+  const [isI18nReady, setIsI18nReady] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    // i18next.init() is async (see i18next.ts) - components that call
+    // useTranslation() before it resolves vs. after it resolves take a
+    // different internal hook path in react-i18next, which breaks React's
+    // Rules of Hooks if the same component instance stays mounted across
+    // that transition (confirmed - caused a real render crash). Block
+    // rendering the app tree until it's actually done.
+    i18nextReady.finally(() => {
+      if (mounted) setIsI18nReady(true);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const client = useMemo(
     () =>
@@ -77,7 +94,7 @@ function ModeAwareRootLayout() {
     mode,
   ]);
 
-  const appReady = loaded && isModeReady && isTokenReady;
+  const appReady = loaded && isModeReady && isTokenReady && isI18nReady;
 
   return (
     <AnimatedSplashScreen ready={appReady}>
