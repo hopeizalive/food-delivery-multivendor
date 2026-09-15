@@ -63,7 +63,18 @@ export ANDROID_HOME="$ANDROID_SDK_ROOT"
 export PATH="$JDK_HOME/bin:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
 
 log "accepting SDK licenses (output below is sdkmanager's own — normal, not stuck)"
-yes | sdkmanager --licenses
+# `yes` gets SIGPIPE'd once sdkmanager stops reading, and under pipefail
+# that alone makes the pipeline report non-zero even when sdkmanager
+# itself succeeded -- which would abort the whole script right here (set
+# -e) despite licenses actually being accepted. Check sdkmanager's own
+# exit code via PIPESTATUS instead of trusting the pipeline's.
+if ! yes | sdkmanager --licenses; then
+  SDKMANAGER_EXIT="${PIPESTATUS[1]}"
+  if [ "$SDKMANAGER_EXIT" -ne 0 ]; then
+    err "sdkmanager --licenses failed (exit $SDKMANAGER_EXIT) -- not just yes's harmless SIGPIPE"
+    exit 1
+  fi
+fi
 log "installing platform-tools, platforms, build-tools — another few hundred MB, this also takes a bit"
 sdkmanager --install \
   "platform-tools" \
