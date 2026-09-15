@@ -1,0 +1,3 @@
+scripts/build-setup/*.sh text eol=lf
+mock-api/*.sh text eol=lf
+.devcontainer/*.json text eol=lf

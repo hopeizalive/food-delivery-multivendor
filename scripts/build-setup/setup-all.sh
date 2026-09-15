@@ -43,7 +43,7 @@ EXTRA_ARGS=()
 [ -n "$API_URL" ] && EXTRA_ARGS+=(--api-url "$API_URL")
 
 for app in "${APPS[@]}"; do
-  "$SCRIPT_DIR/setup-app.sh" "$app" "${EXTRA_ARGS[@]}"
+  bash "$SCRIPT_DIR/setup-app.sh" "$app" "${EXTRA_ARGS[@]}"
 done
 
 log "all done: ${APPS[*]}"
