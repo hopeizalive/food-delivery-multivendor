@@ -17,6 +17,7 @@ scripts/build-setup/
   start-app.sh                      # run one app's dev server, reachable from a phone
   verify-build.sh                   # typecheck + lint (+ optional `expo export`)
   setup-android.sh                  # one-time: JDK 21 + Android SDK, for local APK builds
+  verify-android.sh                 # check the Android toolchain actually installed correctly
   build-apk.sh                      # build one app's debug .apk with Gradle (no EAS)
   serve-apks.sh                     # serve dist/apks with a per-APK QR code for the team
   lib.sh                            # shared shell helpers
@@ -154,6 +155,9 @@ quota, not Expo's). It's opt-in and never runs automatically — nothing in
 # once per container
 bash scripts/build-setup/setup-android.sh
 
+# confirm it actually installed correctly before trying a build
+bash scripts/build-setup/verify-android.sh
+
 # once per app, repeat for each (they don't run in parallel on a small
 # machine — build one, then the next)
 bash scripts/build-setup/build-apk.sh multivendor-rider
@@ -171,7 +175,16 @@ versions `multivendor-app`/`-rider`/`-store` need, via plain `sdkmanager`
 calls — not a devcontainer Feature, since that's exactly what broke
 container creation before Features were dropped from
 `.devcontainer/devcontainer.json` (see git history). It's idempotent, safe
-to re-run.
+to re-run. Its downloads and `sdkmanager` output print live (progress
+bars, license prompts) rather than being redirected to `/dev/null` — a
+quiet multi-minute gap here looks identical to a hang, so don't Ctrl+C
+early just because nothing new printed for a bit.
+
+`verify-android.sh` checks the actual files on disk — `java`, `sdkmanager`,
+`adb`, both platforms, both build-tools versions, accepted licenses — and
+reports pass/fail per item instead of trusting that the installer "said"
+it finished. Run it any time something in the Android build chain seems
+off, not just right after `setup-android.sh`.
 
 `build-apk.sh <app>` runs `expo prebuild --platform android --clean` then
 `./gradlew assembleDebug`, and copies the result to
