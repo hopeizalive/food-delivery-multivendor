@@ -79,4 +79,17 @@ export PATH="\$JAVA_HOME/bin:\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$ANDRO
 EOF
 sudo chmod +x "$PROFILE_SCRIPT"
 
-log "Android SDK ready at $ANDROID_SDK_ROOT — open a new terminal (or 'source $PROFILE_SCRIPT') to pick up the env vars"
+# /etc/profile.d only auto-loads for a login shell; VS Code's default
+# integrated terminal is a non-login shell that only reads ~/.bashrc, so
+# source it from there too (idempotent — skips if already added).
+BASHRC_MARKER="# android-sdk (scripts/build-setup/setup-android.sh)"
+if ! grep -qF "$BASHRC_MARKER" "$HOME/.bashrc" 2>/dev/null; then
+  {
+    echo "$BASHRC_MARKER"
+    echo "[ -f '$PROFILE_SCRIPT' ] && source '$PROFILE_SCRIPT'"
+  } >> "$HOME/.bashrc"
+fi
+
+log "Android SDK ready at $ANDROID_SDK_ROOT"
+log "pick up the env vars now with: source $PROFILE_SCRIPT"
+log "(new terminals will get it automatically from now on)"
