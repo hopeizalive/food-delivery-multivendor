@@ -1,9 +1,6 @@
 {
   "name": "fd Expo build container",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-20-bullseye",
-  "features": {
-    "ghcr.io/devcontainers/features/common-utils:2": {}
-  },
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bullseye",
   "postCreateCommand": "bash scripts/build-setup/setup-all.sh",
   "forwardPorts": [8081, 19000, 19001, 19002],
   "portsAttributes": {
