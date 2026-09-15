@@ -18,6 +18,7 @@ scripts/build-setup/
   verify-build.sh                   # typecheck + lint (+ optional `expo export`)
   setup-android.sh                  # one-time: JDK 21 + Android SDK, for local APK builds
   verify-android.sh                 # check the Android toolchain actually installed correctly
+  setup-swap.sh                     # best-effort swapfile, guards against OOM during build-apk.sh
   build-apk.sh                      # build one app's debug .apk with Gradle (no EAS)
   check-apks.sh                     # check whether all 3 debug APKs are built yet
   serve-apks.sh                     # serve dist/apks with a per-APK QR code for the team
@@ -200,14 +201,27 @@ dependency of all three apps.
 
 It also caps Gradle's memory usage (`GRADLE_OPTS`, `--no-daemon`,
 `--max-workers=2`, plus a `kotlin.daemon.jvm.options` cap in
-`~/.gradle/gradle.properties`). Without this, the default free Codespaces
-machine (`basicLinux32gb`: 2 cores / 8GB RAM) can get **OOM-killed by the
-platform mid-build** — which looks like "the codespace just stopped" with
-no build error at all, since the kill happens outside the build process
-itself. If that ever happens again: `gh codespace list` /
-`gh codespace view -c <name>` shows the machine size and last-used/updated
-timestamps — a stop within a couple minutes of heavy build activity (not
-~30 min later, which would be the idle timeout instead) points at OOM.
+`~/.gradle/gradle.properties`) and runs `setup-swap.sh` first. Without
+this, the default free Codespaces machine (`basicLinux32gb`: 2 cores / 8GB
+RAM) can get **OOM-killed mid-build** — either the whole container
+(platform-level kill, looks like "the codespace just stopped" with no
+build error at all) or just the Gradle daemon (Gradle's own low-memory
+self-check killing itself, surfaced as "Gradle build daemon disappeared
+unexpectedly" in the build output). If that ever happens again:
+`gh codespace list` / `gh codespace view -c <name>` shows the machine size
+and last-used/updated timestamps — a stop within a couple minutes of heavy
+build activity (not ~30 min later, which would be the idle timeout
+instead) points at OOM. If it recurs even with the caps in place, the
+remaining lever is closing other memory users first — any other terminal
+still running `expo start`/Metro (`start-app.sh`) is competing for the
+same 8GB.
+
+`setup-swap.sh [size-in-GB, default 4]` adds a swapfile so a memory spike
+degrades (slower) instead of something getting killed — best-effort, and
+harmless to the build if the container doesn't allow `swapon` (some don't;
+it just warns and continues without it). Runs automatically at the start
+of `build-apk.sh`; safe to re-run on its own too, since it no-ops if swap
+is already active.
 
 `check-apks.sh` just checks `dist/apks/` for all three
 `<app>-debug.apk` files and reports size + build time for whichever exist,

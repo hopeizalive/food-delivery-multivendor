@@ -39,15 +39,22 @@ fi
 
 export CI=1 # keep expo prebuild / gradle non-interactive
 
+# Best-effort swapfile so a memory spike degrades (slower) instead of
+# Gradle's own low-memory daemon-suicide check killing the build, or the
+# OS OOM-killer taking something out. Never fails the build if it can't.
+bash "$SCRIPT_DIR/setup-swap.sh" || true
+
 # Also cap the Kotlin compiler daemon (a separate JVM Gradle spawns for
 # Kotlin sources) — GRADLE_OPTS/--max-workers below don't reach it, only a
 # gradle.properties key does. User-home gradle.properties applies to every
-# app, so this only needs writing once.
+# app. Replace-or-append so re-running with an updated cap actually takes
+# effect instead of leaving a stale value from a previous run.
 GRADLE_USER_PROPS="$HOME/.gradle/gradle.properties"
 mkdir -p "$HOME/.gradle"
-if ! grep -q "kotlin.daemon.jvm.options" "$GRADLE_USER_PROPS" 2>/dev/null; then
-  echo "kotlin.daemon.jvm.options=-Xmx1g" >> "$GRADLE_USER_PROPS"
-fi
+touch "$GRADLE_USER_PROPS"
+grep -v "^kotlin.daemon.jvm.options=" "$GRADLE_USER_PROPS" > "$GRADLE_USER_PROPS.tmp" || true
+echo "kotlin.daemon.jvm.options=-Xmx768m" >> "$GRADLE_USER_PROPS.tmp"
+mv "$GRADLE_USER_PROPS.tmp" "$GRADLE_USER_PROPS"
 
 log "[$APP_DIR] expo prebuild --platform android"
 (cd "$APP_PATH" && npx expo prebuild --platform android --clean)
@@ -55,16 +62,19 @@ log "[$APP_DIR] expo prebuild --platform android"
 log "[$APP_DIR] chmod +x gradlew"
 chmod +x "$APP_PATH/android/gradlew"
 
-# Codespaces' free machine is 2 cores / 8GB RAM. Gradle's own default heap
-# sizing (and a template gradle.properties that assumes a bigger box) plus
-# a separate Kotlin-daemon JVM can add up past that and get the whole
-# container OOM-killed mid-build -- which looks like "the codespace just
-# stopped" with no error, since the kill happens outside the build's own
-# process. Keep everything to one JVM, capped, instead of Gradle's
-# defaults. GRADLE_OPTS/--no-daemon/--max-workers are honored directly by
+# Codespaces' free machine is 2 cores / 8GB RAM, shared with whatever else
+# is running (VS Code server, any Metro dev servers left up from
+# start-app.sh, etc). Gradle's own default heap sizing (and a template
+# gradle.properties that assumes a bigger box) plus a separate
+# Kotlin-daemon JVM can add up past what's left and get the daemon killed
+# mid-build (Gradle's own low-memory self-check, or the OS OOM-killer) --
+# which looks like "the codespace just stopped"/"daemon disappeared" with
+# no real build error. Keep the main JVM capped low and leave real
+# headroom. GRADLE_OPTS/--no-daemon/--max-workers are honored directly by
 # the gradlew launcher regardless of what expo prebuild wrote into the
-# regenerated android/gradle.properties.
-export GRADLE_OPTS="-Xmx3g -XX:MaxMetaspaceSize=512m"
+# regenerated android/gradle.properties. If this still gets killed, close
+# any other terminals running `expo start`/Metro before retrying.
+export GRADLE_OPTS="-Xmx2g -XX:MaxMetaspaceSize=384m"
 GRADLE_MEMORY_FLAGS=(--no-daemon --max-workers=2)
 
 log "[$APP_DIR] ./gradlew assembleDebug (this can take a while on first run)"
