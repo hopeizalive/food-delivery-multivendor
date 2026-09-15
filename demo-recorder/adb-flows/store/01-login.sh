@@ -38,7 +38,10 @@ while (( SECONDS - start < 35 )); do
     _log "PASSED: store/01-login"
     exit 0
   fi
-  if grep -q 'store-login-username-input' "$f"; then
+  # No resource-id/testID propagates to the native view on this screen at
+  # all (confirmed via uiautomator dump) - detect via real screen copy
+  # instead of the non-existent "store-login-username-input" id string.
+  if grep -q 'Enter Your Credentials to login' "$f"; then
     _log "store login screen visible"
     found_screen="login"
     break
@@ -56,19 +59,24 @@ if [[ -z "$found_screen" ]]; then
   exit 1
 fi
 
-tap_id "store-login-username-input" || exit 1
+# Both fields have neither resource-id, content-desc, nor stable
+# placeholder text - they show a remembered/pre-filled value instead
+# (e.g. "FalafelTmeer@yopmail.com"), confirmed via uiautomator dump. The
+# 1st/2nd EditText on screen is the only reliable target; clear_input
+# wipes whatever pre-filled value was there before typing ours.
+tap_nth_edittext 1 || exit 1
 clear_input
 type_text "store-demo"
 press_back
 sleep 1
 
-tap_id "store-login-password-input" || exit 1
+tap_nth_edittext 2 || exit 1
 clear_input
 type_text "demo1234"
 press_back
 sleep 1
 
-tap_id_retry "store-login-submit-button" 3 2 || { _log "FAILED: could not submit login"; exit 1; }
+tap_text_retry "Login" 3 2 || { _log "FAILED: could not submit login"; exit 1; }
 
 sleep 3
 _log "PASSED: store/01-login (verify landing screen manually if unsure)"

@@ -8,13 +8,17 @@ _log "=== customer/04-checkout ==="
 
 tap_text "VIEW YOUR CART" || exit 1
 
-if ! wait_for_id "customer-cart-checkout-button" 15; then
+# The cart's Checkout button has no resource-id on this build (confirmed
+# via uiautomator dump) - its own text is the real, non-degenerate-bounds
+# selector.
+if ! wait_for_text "Checkout" 15; then
   _log "FAILED: cart checkout button never appeared"
   exit 1
 fi
-tap_id "customer-cart-checkout-button" || exit 1
+tap_text "Checkout" || exit 1
 
-if ! wait_for_id "customer-place-order-button" 15; then
+# Same story: no resource-id on this build, use its own text.
+if ! wait_for_text "Place Order" 15; then
   _log "FAILED: place-order button never appeared"
   exit 1
 fi

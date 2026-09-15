@@ -15,7 +15,13 @@ source lib/adb-ui.sh
 
 _log "=== customer/03-add-to-cart ==="
 
-tap_id "menu-food-item-food-1" || exit 1
+# The food item card has no resource-id, and its content-desc is a big
+# composite accessibility label ("Loaded Nachos, Crispy nachos, cheese,
+# jalapenos, $ 6.50, $ 13.00"), not the testID - confirmed via uiautomator
+# dump. Its own display name is the only real selector available, tying
+# this to Demo Bistro's current seed data same as the rest of this file
+# already acknowledges above.
+tap_text "Loaded Nachos" || exit 1
 
 # Poll for whichever of the two outcomes shows up first.
 start=$SECONDS

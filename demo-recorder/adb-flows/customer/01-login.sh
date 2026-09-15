@@ -71,27 +71,34 @@ if ! wait_for_text "Continue with Email" 15; then
 fi
 tap_text "Continue with Email" || exit 1
 
-if ! wait_for_id "customer-login-email-input" 15; then
+# Both the email and password EditText fields have empty resource-id AND
+# empty content-desc on this build (confirmed via uiautomator dump) - the
+# RN testID isn't reaching the native view here at all, so id-based lookup
+# can never work. Their placeholder text ("Email"/"Password") is the only
+# usable selector and has real (non-degenerate) bounds, unlike the tab bar.
+if ! wait_for_text "Email" 15; then
   _log "FAILED: email input never appeared"
   exit 1
 fi
-tap_id "customer-login-email-input" || exit 1
+tap_text "Email" || exit 1
 type_text "demo@enatega.com"
 press_back  # dismiss keyboard so the Continue button isn't covered
 sleep 1
 
-tap_id_retry "customer-login-continue-button" 3 2 || { _log "FAILED: could not advance past email step"; exit 1; }
+tap_text_retry "Continue" 3 2 || { _log "FAILED: could not advance past email step"; exit 1; }
 
-if ! wait_for_id "customer-login-password-input" 15; then
+if ! wait_for_text "Password" 15; then
   _log "FAILED: password input never appeared"
   exit 1
 fi
-tap_id "customer-login-password-input" || exit 1
+tap_text "Password" || exit 1
 type_text "demo1234"
 press_back
 sleep 1
 
-tap_id_retry "customer-login-continue-button" 3 2 || { _log "FAILED: could not submit login"; exit 1; }
+# This submit button is labeled "Login", not "Continue" (confirmed via
+# dump) - a different button from the email step's, not the same ID reused.
+tap_text_retry "Login" 3 2 || { _log "FAILED: could not submit login"; exit 1; }
 
 if ! wait_for_text "Discovery" 15; then
   _log "FAILED: did not land back on Discovery after login"

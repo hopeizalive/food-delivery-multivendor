@@ -11,7 +11,8 @@ source lib/adb-ui.sh
 
 _log "=== customer/05-place-order ==="
 
-tap_id "customer-place-order-button" || exit 1
+# No resource-id on this build (confirmed via uiautomator dump) - use text.
+tap_text "Place Order" || exit 1
 
 # Give the native permission dialog a moment to appear, and dismiss it if so.
 sleep 2

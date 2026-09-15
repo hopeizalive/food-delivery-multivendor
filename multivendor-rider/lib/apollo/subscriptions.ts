@@ -50,6 +50,7 @@ export const SUBSCRIPTION_ZONE_ORDERS = gql`
         restaurant {
           _id
           name
+          image
           address
           location {
             coordinates
@@ -104,6 +105,21 @@ export const SUBSCRIPTION_ZONE_ORDERS = gql`
         reason
         isRiderRinged
         preparationTime
+        eta {
+          phase
+          source
+          readyAt
+          baseArrivalAt
+          estimatedArrivalAt
+          windowStartAt
+          windowEndAt
+          durationSeconds
+          distanceMeters
+          encodedPolyline
+          calculatedAt
+          lastLocationAt
+          version
+        }
         rider {
           _id
           name
@@ -133,6 +149,7 @@ export const SINGLE_VENDOR_SUBSCRIPTION_ZONE_ORDERS = gql`
         restaurant {
           _id
           name
+          image
           address
           location {
             coordinates
@@ -188,6 +205,21 @@ export const SINGLE_VENDOR_SUBSCRIPTION_ZONE_ORDERS = gql`
         reason
         isRiderRinged
         preparationTime
+        eta {
+          phase
+          source
+          readyAt
+          baseArrivalAt
+          estimatedArrivalAt
+          windowStartAt
+          windowEndAt
+          durationSeconds
+          distanceMeters
+          encodedPolyline
+          calculatedAt
+          lastLocationAt
+          version
+        }
         rider {
           _id
           name
@@ -207,6 +239,7 @@ export const SUBSCRIPTION_ASSIGNED_RIDER = gql`
         createdAt
         acceptedAt
         pickedAt
+        assignedAt
         isPickedUp
         deliveredAt
         expectedTime
@@ -214,6 +247,7 @@ export const SUBSCRIPTION_ASSIGNED_RIDER = gql`
         restaurant {
           _id
           name
+          image
           address
           location {
             coordinates
@@ -269,6 +303,21 @@ export const SUBSCRIPTION_ASSIGNED_RIDER = gql`
         reason
         isRiderRinged
         preparationTime
+        eta {
+          phase
+          source
+          readyAt
+          baseArrivalAt
+          estimatedArrivalAt
+          windowStartAt
+          windowEndAt
+          durationSeconds
+          distanceMeters
+          encodedPolyline
+          calculatedAt
+          lastLocationAt
+          version
+        }
         rider {
           _id
           name
@@ -289,6 +338,7 @@ export const SINGLE_VENDOR_SUBSCRIPTION_ASSIGNED_RIDER = gql`
         createdAt
         acceptedAt
         pickedAt
+        assignedAt
         isPickedUp
         deliveredAt
         expectedTime
@@ -296,6 +346,7 @@ export const SINGLE_VENDOR_SUBSCRIPTION_ASSIGNED_RIDER = gql`
         restaurant {
           _id
           name
+          image
           address
           location {
             coordinates
@@ -352,6 +403,21 @@ export const SINGLE_VENDOR_SUBSCRIPTION_ASSIGNED_RIDER = gql`
         reason
         isRiderRinged
         preparationTime
+        eta {
+          phase
+          source
+          readyAt
+          baseArrivalAt
+          estimatedArrivalAt
+          windowStartAt
+          windowEndAt
+          durationSeconds
+          distanceMeters
+          encodedPolyline
+          calculatedAt
+          lastLocationAt
+          version
+        }
         rider {
           _id
           name

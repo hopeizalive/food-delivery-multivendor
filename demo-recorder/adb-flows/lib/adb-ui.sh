@@ -13,10 +13,28 @@ mkdir -p "$DEMO_DUMP_DIR"
 _log() { echo "[$(date +%H:%M:%S)] $*"; }
 
 # Pull a fresh uiautomator dump to $DEMO_DUMP_DIR/current.xml and echo its path.
+# uiautomator logs "could not get idle state" on any screen with a
+# continuously-ticking element (e.g. the store app's auto-decline countdown)
+# - it internally waits ~10s for idle, gives up, and dumps the current state
+# anyway. That dump is normally still perfectly usable, so we do NOT retry on
+# the warning text alone (each retry would re-pay that same ~10s internal
+# wait, turning a single call into 50s+ for no benefit - measured directly).
+# Only retry if the pulled file is actually unusable (empty/corrupt), which
+# a real transient adb hiccup would produce, and cap it at 2 fast retries.
 ui_dump() {
   local out="$DEMO_DUMP_DIR/current.xml"
-  adb shell uiautomator dump //sdcard/demo_dump.xml >/dev/null 2>&1
-  adb pull //sdcard/demo_dump.xml "$out" >/dev/null 2>&1
+  local attempt
+  for attempt in 1 2 3; do
+    adb shell uiautomator dump //sdcard/demo_dump.xml >/dev/null 2>&1
+    adb pull //sdcard/demo_dump.xml "$out" >/dev/null 2>&1
+    if [[ -s "$out" ]] && grep -q '<?xml' "$out" 2>/dev/null; then
+      echo "$out"
+      return 0
+    fi
+    sleep 0.3
+  done
+  # Last resort: whatever we last managed to pull, even if suspect - callers
+  # already handle "text not found" gracefully via their own retry loops.
   echo "$out"
 }
 
@@ -52,6 +70,21 @@ _bounds_by_desc() {
     | grep -o '[0-9]\+' | tr '\n' ',' | sed 's/,$//'
 }
 
+# Extract "x1,y1,x2,y2" for the Nth (1-indexed) android.widget.EditText
+# node in document order (matches visual top-to-bottom order for a simple
+# login form). Fallback for fields with neither resource-id, content-desc,
+# nor a stable placeholder text - confirmed on the store/rider login
+# screens, whose username/password EditTexts show a remembered/pre-filled
+# value (e.g. "FalafelTmeer@yopmail.com") instead of empty placeholder
+# text, so text-based matching can't target them reliably either.
+_bounds_by_nth_edittext() {
+  local n="$1" file="$2"
+  grep -o '<node[^>]*class="android\.widget\.EditText"[^>]*bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"[^>]*/>' "$file" \
+    | sed -n "${n}p" \
+    | grep -o 'bounds="\[[0-9]*,[0-9]*\]\[[0-9]*,[0-9]*\]"' \
+    | grep -o '[0-9]\+' | tr '\n' ',' | sed 's/,$//'
+}
+
 _center_of() {
   local b="$1"
   local x1 y1 x2 y2
@@ -76,6 +109,35 @@ dismiss_known_alerts() {
   if grep -q 'send you notifications' "$f"; then
     _log "auto-dismissing permission dialog"
     local b; b=$(_bounds_by_text "Allow" "$f")
+    if [[ -n "$b" ]]; then
+      local xy; xy=$(_center_of "$b")
+      adb shell input tap $xy
+    fi
+    return 0
+  fi
+  # Adding an item from a different restaurant than whatever's already in
+  # the cart. Confirmed to occur in practice: a leftover cart from a
+  # different restaurant (e.g. a previous run that failed mid-flow before
+  # reaching checkout) blocks 03-add-to-cart's tap with this dialog
+  # instead of adding the item. Tapping OK clears the stale cart and
+  # proceeds with the current restaurant, which is what every flow wants.
+  if grep -q 'items you.ve added to cart will be cleared' "$f"; then
+    _log "auto-dismissing switch-restaurant cart-clear dialog"
+    local b; b=$(_bounds_by_text "OK" "$f")
+    if [[ -n "$b" ]]; then
+      local xy; xy=$(_center_of "$b")
+      adb shell input tap $xy
+    fi
+    return 0
+  fi
+  # Rider app's own in-app permission-priming dialog (not an OS dialog),
+  # confirmed to appear right after claiming an order and block the
+  # ASSIGNED-status check behind it. "Not now" avoids also triggering the
+  # real OS location-permission dialog on top of it - live GPS tracking
+  # isn't needed to validate order-lifecycle state transitions.
+  if grep -q 'Allow background location for live delivery tracking' "$f"; then
+    _log "auto-dismissing rider location-tracking priming dialog"
+    local b; b=$(_bounds_by_text "Not now" "$f")
     if [[ -n "$b" ]]; then
       local xy; xy=$(_center_of "$b")
       adb shell input tap $xy
@@ -143,12 +205,29 @@ tap_id() {
 }
 
 # tap_text <exact text>
+#
+# Some elements (this app's bottom tab bar: Discovery/Restaurants/Store/
+# Search/Profile, confirmed via uiautomator dump) render their label as a
+# separate non-clickable child whose bounds collapse to "[0,0][0,0]", while
+# the actual tappable parent carries the same string as content-desc
+# instead. A tap computed from a [0,0][0,0] box lands on the screen's
+# top-left corner, not the element - the tap "succeeds" (adb reports no
+# error) but silently does nothing, so the flow times out several steps
+# later looking like an unrelated failure. Fall back to content-desc
+# before giving up, so every current and future caller gets this for free
+# instead of needing to know to use tap_desc for tab-bar-style elements.
 tap_text() {
   local text="$1"
   local f; f=$(ui_dump)
   local b; b=$(_bounds_by_text "$text" "$f")
-  if [[ -z "$b" ]]; then
-    _log "tap_text FAILED - text=\"$text\" not found"
+  if [[ -z "$b" || "$b" == "0,0,0,0" ]]; then
+    local db; db=$(_bounds_by_desc "$text" "$f")
+    if [[ -n "$db" && "$db" != "0,0,0,0" ]]; then
+      b="$db"
+    fi
+  fi
+  if [[ -z "$b" || "$b" == "0,0,0,0" ]]; then
+    _log "tap_text FAILED - text=\"$text\" not found (or only as a zero-bounds node)"
     return 1
   fi
   local xy; xy=$(_center_of "$b")
@@ -170,6 +249,22 @@ tap_desc() {
   adb shell input tap $xy
 }
 
+# tap_nth_edittext <n> -- taps the Nth (1-indexed) EditText field on
+# screen, for login forms whose fields have neither resource-id,
+# content-desc, nor stable placeholder text to match on.
+tap_nth_edittext() {
+  local n="$1"
+  local f; f=$(ui_dump)
+  local b; b=$(_bounds_by_nth_edittext "$n" "$f")
+  if [[ -z "$b" ]]; then
+    _log "tap_nth_edittext FAILED - no EditText at position $n"
+    return 1
+  fi
+  local xy; xy=$(_center_of "$b")
+  _log "tap EditText #$n at ($xy)"
+  adb shell input tap $xy
+}
+
 # tap_id_retry <testID> [tries] [waitAfterTapSeconds]
 # Retries the tap up to `tries` times - covers the known "first tap after a
 # fresh screen sometimes doesn't register" flakiness instead of trusting one tap.
@@ -182,6 +277,25 @@ tap_id_retry() {
       return 0
     fi
     _log "tap_id_retry: attempt $i/$tries failed for id=$id, retrying"
+    i=$((i + 1))
+    sleep 1
+  done
+  return 1
+}
+
+# tap_text_retry <exact text> [tries] [waitAfterTapSeconds] -- same retry
+# behavior as tap_id_retry, for elements only reliably addressable by text
+# (e.g. login-form fields whose testID isn't reaching the native view as a
+# resource-id on this build - confirmed via uiautomator dump).
+tap_text_retry() {
+  local text="$1" tries="${2:-2}" pause="${3:-2}"
+  local i=1
+  while (( i <= tries )); do
+    if tap_text "$text"; then
+      sleep "$pause"
+      return 0
+    fi
+    _log "tap_text_retry: attempt $i/$tries failed for text=\"$text\", retrying"
     i=$((i + 1))
     sleep 1
   done

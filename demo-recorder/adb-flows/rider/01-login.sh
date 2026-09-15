@@ -38,7 +38,10 @@ while (( SECONDS - start < 35 )); do
     _log "PASSED: rider/01-login"
     exit 0
   fi
-  if grep -q 'rider-login-username-input' "$f"; then
+  # No resource-id/testID propagates to the native view on this screen at
+  # all (same as store's login screen, confirmed via uiautomator dump) -
+  # detect via real screen copy instead of a non-existent id string.
+  if grep -q 'Enter Your Credentials to login\|text="Login"' "$f"; then
     _log "rider login screen visible"
     found_screen="login"
     break
@@ -55,21 +58,24 @@ if [[ -z "$found_screen" ]]; then
   grep -o 'text="[^"]\+"' "$f" | head -10
   exit 1
 fi
-  tap_id "rider-login-username-input" || exit 1
-  clear_input
-  type_text "rider-demo"
-  press_back
-  sleep 1
+# Same story as store's login screen: no resource-id/content-desc, and
+# fields show a remembered/pre-filled value rather than empty placeholder
+# text, so neither id- nor text-based matching can target them - use
+# positional EditText selection instead (confirmed via uiautomator dump).
+tap_nth_edittext 1 || exit 1
+clear_input
+type_text "rider-demo"
+press_back
+sleep 1
 
-  tap_id "rider-login-password-input" || exit 1
-  clear_input
-  type_text "demo1234"
-  press_back
-  sleep 1
+tap_nth_edittext 2 || exit 1
+clear_input
+type_text "demo1234"
+press_back
+sleep 1
 
-  tap_id_retry "rider-login-submit-button" 3 2 || { _log "FAILED: could not submit rider login"; exit 1; }
-  sleep 3
-fi
+tap_text_retry "Login" 3 2 || { _log "FAILED: could not submit rider login"; exit 1; }
+sleep 3
 
 if ! wait_for_text "Orders" 20; then
   _log "FAILED: did not land on Orders dashboard after login"

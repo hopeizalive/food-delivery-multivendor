@@ -23,6 +23,17 @@ if grep -q 'text="Mark as Delivered"' "$f"; then
   exit 0
 fi
 
+# The Pick up button sits below the initial viewport on the order-details
+# screen (confirmed via uiautomator dump: a map view fills most of the
+# screen above it) - unlike store's accept-order screen, nothing here
+# scrolls the content into view on its own, so wait_for_text alone would
+# wait out its full timeout no matter how long, never seeing it appear.
+if ! wait_for_text "Pick up" 4 && ! wait_for_id "rider-pickup-button" 4; then
+  _log "'Pick up' not immediately visible, swiping up to reveal below the map"
+  adb shell input swipe 360 1300 360 700
+  sleep 1
+fi
+
 if ! wait_for_text "Pick up" 15 && ! wait_for_id "rider-pickup-button" 15; then
   _log "FAILED: 'Pick up' button never appeared"
   exit 1

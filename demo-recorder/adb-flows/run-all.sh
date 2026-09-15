@@ -9,7 +9,8 @@ cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
 echo "=========================================="
 echo "RESETTING DEMO STATE (clean slate)"
 echo "=========================================="
-curl -s -X POST http://localhost:4000/graphql -H "Content-Type: application/json" -d '{"query":"mutation{ resetDemo }"}' >/dev/null 2>&1 || true
+MOCK_API_URL="${MOCK_API_URL:-https://enatega-demo-mock-api.onrender.com/graphql}"
+curl -s -X POST "$MOCK_API_URL" -H "Content-Type: application/json" -d '{"query":"mutation{ resetDemo }"}' >/dev/null 2>&1 || true
 sleep 1
 
 echo "=========================================="

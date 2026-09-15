@@ -99,14 +99,10 @@ mock API:
   normal for a debug/dev-client build, not a workaround — any React Native
   debug build needs a running Metro bundler).
 - Two real Windows-environment build blockers were found and fixed:
-  - Windows `MAX_PATH` (260 char) limit broke a native C++ codegen build
-    (`react-native-keyboard-controller`). Windows' registry "long paths"
-    setting did **not** fix it (the native `ninja.exe` toolchain isn't
-    long-path aware). Fixed by mapping a short drive letter to the project
-    (`subst X: D:\dev\food-delivery-multivendor\multivendor-app`)
-    and building from `X:\android` instead. **This subst mapping is
-    session-only — it will need to be re-created (same command) after a
-    reboot before rebuilding natively again.**
+  - Windows `MAX_PATH` (260 char) limit previously broke native C++ codegen builds
+    (`react-native-keyboard-controller`) when Android SDK bundled Ninja 1.10.2.
+    Permanently resolved by updating the Android SDK CMake `ninja.exe` to v1.13.2,
+    which natively supports long paths on Windows without requiring temporary `subst X:` drive mappings.
   - Broken/incomplete Android NDK install — reinstalled via `sdkmanager`.
 
 ### 5. Full order lifecycle — customer side confirmed end-to-end (native Android, multivendor)

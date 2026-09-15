@@ -77,6 +77,11 @@ goodbite-multivendor-app
 # Debug screenshots taken during manual testing/demo verification (kept locally, not committed)
 /debug-snapshots/
 
+# uiautomator XML dumps and one-off GraphQL debug payloads from adb-flows
+# test debugging (kept locally, not committed)
+demo-recorder/adb-flows/dump*.xml
+demo-recorder/adb-flows/check_*.json
+
 # mock-api lives in its own repo (github.com/hopeizalive/enatega-demo-mock-api) and is
 # deployed separately - kept here on disk for local dev/testing but must never be
 # committed as part of this template project's history.
