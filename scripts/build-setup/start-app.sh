@@ -26,8 +26,9 @@ if [ ! -d "$APP_PATH" ]; then
   exit 1
 fi
 
-if [ "${CODESPACES:-}" = "true" ] && [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
-  export EXPO_PACKAGER_PROXY_URL="https://${CODESPACE_NAME}-${PORT}.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+FORWARDED_URL="$(codespaces_forwarded_url "$PORT")"
+if [ -n "$FORWARDED_URL" ]; then
+  export EXPO_PACKAGER_PROXY_URL="$FORWARDED_URL"
   log "[$APP_DIR] Codespaces detected — advertising $EXPO_PACKAGER_PROXY_URL instead of the internal LAN IP"
   log "[$APP_DIR] make sure port $PORT is set to Public in the Ports tab (or add it to devcontainer.json portsAttributes)"
 else

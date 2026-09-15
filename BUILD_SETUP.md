@@ -16,6 +16,9 @@ scripts/build-setup/
   setup-app.sh                      # same, for a single app
   start-app.sh                      # run one app's dev server, reachable from a phone
   verify-build.sh                   # typecheck + lint (+ optional `expo export`)
+  setup-android.sh                  # one-time: JDK 21 + Android SDK, for local APK builds
+  build-apk.sh                      # build one app's debug .apk with Gradle (no EAS)
+  serve-apks.sh                     # serve dist/apks with a per-APK QR code for the team
   lib.sh                            # shared shell helpers
   env-templates/*.env               # .env template per app
 ```
@@ -128,14 +131,62 @@ you need maps to render.
 
 Exits non-zero and lists which app(s)/step(s) failed if anything breaks.
 
-## Native (EAS) builds
+## Native builds
 
-This setup does not install Android SDK/Xcode — that's out of scope for a
-lightweight Codespace/CI container. Once JS-level verification passes,
-native builds still go through EAS as documented in the root `README.md`
-("Building Development Versions") and each app's `package.json`
-(`npm run build:staging`, `build:development`, `build:production`, etc.),
-which run on Expo's own build infrastructure, not this container.
+### Option A: EAS (cloud, uses Expo build credits)
+
+Documented in the root `README.md` ("Building Development Versions") and
+each app's `package.json` (`npm run build:staging`, `build:development`,
+`build:production`, etc.) — runs on Expo's own build infrastructure, not
+this container. Covers both Android and iOS.
+
+### Option B: local Android APK build in this container (no EAS credits)
+
+Android only — iOS needs Xcode, which doesn't run on Linux, so this path
+has no iOS equivalent; use EAS for iOS. This is a genuinely heavier lift
+than the JS-only setup above (Gradle/Android builds are resource- and
+time-intensive — expect ~15–25 min for a first build, several GB of SDK/
+Gradle-cache disk use, and it counts against your Codespaces core-hour
+quota, not Expo's). It's opt-in and never runs automatically — nothing in
+`postCreateCommand` touches it.
+
+```bash
+# once per container
+bash scripts/build-setup/setup-android.sh
+
+# once per app, repeat for each (they don't run in parallel on a small
+# machine — build one, then the next)
+bash scripts/build-setup/build-apk.sh multivendor-rider
+bash scripts/build-setup/build-apk.sh multivendor-store
+bash scripts/build-setup/build-apk.sh multivendor-app
+
+# serve dist/apks/*.apk with a QR code per APK for the team to scan
+bash scripts/build-setup/serve-apks.sh
+```
+
+`setup-android.sh` installs JDK 21 (matching the team's existing local
+build setup — not 17, which is Expo/RN's usual minimum but not what this
+repo is actually built with) plus the Android SDK platform/build-tools
+versions `multivendor-app`/`-rider`/`-store` need, via plain `sdkmanager`
+calls — not a devcontainer Feature, since that's exactly what broke
+container creation before Features were dropped from
+`.devcontainer/devcontainer.json` (see git history). It's idempotent, safe
+to re-run.
+
+`build-apk.sh <app>` runs `expo prebuild --platform android --clean` then
+`./gradlew assembleDebug`, and copies the result to
+`dist/apks/<app>-debug.apk` (git-ignored — see `/dist` in `.gitignore`).
+It's a debug-signed APK: installs fine for internal team testing via
+"unknown sources", not Play-Store-eligible. Same dev-client behavior as an
+EAS `development`-profile build, since `expo-dev-client` is already a
+dependency of all three apps.
+
+`serve-apks.sh [port]` (default port `9000`, already forwarded + set
+Public in `devcontainer.json`) generates a QR code per `.apk` in
+`dist/apks/` pointing at that file's Codespaces-forwarded download URL,
+and serves an index page showing all of them — open the forwarded `9000`
+URL in a browser, scan with a phone camera, done. Uses the same
+`codespaces_forwarded_url()` helper (`lib.sh`) as `start-app.sh`.
 
 ## Windows Local Native Builds: Ninja MAX_PATH (260-Character Limit)
 

@@ -33,3 +33,12 @@ install_deps() {
     (cd "$dir" && npm install --legacy-peer-deps)
   fi
 }
+
+# codespaces_forwarded_url <port> — echoes this Codespace's public forwarded
+# URL for <port>, or nothing if not running in Codespaces.
+codespaces_forwarded_url() {
+  local port="$1"
+  if [ "${CODESPACES:-}" = "true" ] && [ -n "${CODESPACE_NAME:-}" ] && [ -n "${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-}" ]; then
+    printf 'https://%s-%s.%s' "$CODESPACE_NAME" "$port" "$GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN"
+  fi
+}

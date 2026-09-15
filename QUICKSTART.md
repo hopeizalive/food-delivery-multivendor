@@ -47,3 +47,20 @@ If you forked/customized the devcontainer and lost that, set it manually:
 > can't reach — that's what `start-app.sh` fixes. `--tunnel` (ngrok) is
 > a fallback for containers without Codespaces' env vars, but only one
 > tunnel runs at a time on ngrok's free tier.
+
+> All three apps depend on `expo-dev-client`, so the QR code/link above
+> only opens in each app's own **custom dev-client build** — not the
+> generic Expo Go app from the App/Play Store. If that build isn't on your
+> phone yet, see step 4.
+
+## 4. Don't have the app installed yet? Build an APK, no EAS needed
+
+```bash
+bash scripts/build-setup/setup-android.sh        # once per container
+bash scripts/build-setup/build-apk.sh multivendor-rider
+bash scripts/build-setup/serve-apks.sh            # QR code to scan + download
+```
+
+Slower than steps 1–3 (a real Gradle build, ~15–25 min first time) but
+free of EAS build credits — see [BUILD_SETUP.md](BUILD_SETUP.md#native-builds)
+for the full explanation and the other two apps.
