@@ -2,9 +2,11 @@
   "name": "fd Expo build container",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:20-bullseye",
   "postCreateCommand": "bash scripts/build-setup/setup-all.sh",
-  "forwardPorts": [8081, 19000, 19001, 19002],
+  "forwardPorts": [8081, 8082, 8083, 19000, 19001, 19002],
   "portsAttributes": {
-    "8081": { "label": "Metro bundler" },
+    "8081": { "label": "Metro: multivendor-app", "visibility": "public" },
+    "8082": { "label": "Metro: multivendor-rider", "visibility": "public" },
+    "8083": { "label": "Metro: multivendor-store", "visibility": "public" },
     "19000": { "label": "Expo dev server" },
     "19002": { "label": "Expo dev tools" }
   },
