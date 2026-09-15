@@ -28,7 +28,7 @@ data — no further app change required.
 The customer server (e.g. `aws-server-v2.enatega.com`, a separate repo) and the admin panel
 need these changes. Field names must stay exactly `freeDelivery` and `acceptVouchers`
 (booleans) to match the app and the web interfaces
-(`enatega-multivendor-web/lib/utils/interfaces/restaurants.interface.ts`).
+(`multivendor-web/lib/utils/interfaces/restaurants.interface.ts`).
 
 ### 1. Mongoose model — `Restaurant`
 Add two booleans (default `false`):
@@ -71,7 +71,7 @@ input RestaurantInput {
   fields through from each restaurant document (if the resolver hand-maps fields rather than
   spreading the whole doc, add them explicitly).
 
-### 5. Admin panel — `enatega-multivendor-admin`
+### 5. Admin panel — `multivendor-admin`
 - Add two toggles ("Free delivery", "Accept vouchers") to the restaurant **create/edit** form.
 - Add the fields to the admin's restaurant GraphQL **query** and **create/edit mutation**
   documents so the toggles load and save.
