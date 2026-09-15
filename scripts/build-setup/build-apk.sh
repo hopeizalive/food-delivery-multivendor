@@ -44,16 +44,23 @@ export CI=1 # keep expo prebuild / gradle non-interactive
 # OS OOM-killer taking something out. Never fails the build if it can't.
 bash "$SCRIPT_DIR/setup-swap.sh" || true
 
-# Also cap the Kotlin compiler daemon (a separate JVM Gradle spawns for
-# Kotlin sources) — GRADLE_OPTS/--max-workers below don't reach it, only a
-# gradle.properties key does. User-home gradle.properties applies to every
-# app. Replace-or-append so re-running with an updated cap actually takes
-# effect instead of leaving a stale value from a previous run.
+# Also cap the Kotlin compiler daemon (a separate JVM) and force serial
+# execution at the properties level too, as a backstop in case a project-
+# level gradle.properties (regenerated fresh by expo prebuild --clean
+# every run) sets org.gradle.parallel=true and it takes precedence for
+# that key over the --max-workers CLI flag. User-home gradle.properties
+# applies to every app. Replace-or-append per key so re-running with an
+# updated cap actually takes effect instead of leaving a stale value.
 GRADLE_USER_PROPS="$HOME/.gradle/gradle.properties"
 mkdir -p "$HOME/.gradle"
 touch "$GRADLE_USER_PROPS"
-grep -v "^kotlin.daemon.jvm.options=" "$GRADLE_USER_PROPS" > "$GRADLE_USER_PROPS.tmp" || true
-echo "kotlin.daemon.jvm.options=-Xmx768m" >> "$GRADLE_USER_PROPS.tmp"
+grep -vE "^(kotlin\.daemon\.jvm\.options|org\.gradle\.parallel|org\.gradle\.workers\.max)=" \
+  "$GRADLE_USER_PROPS" > "$GRADLE_USER_PROPS.tmp" || true
+{
+  echo "kotlin.daemon.jvm.options=-Xmx768m"
+  echo "org.gradle.parallel=false"
+  echo "org.gradle.workers.max=1"
+} >> "$GRADLE_USER_PROPS.tmp"
 mv "$GRADLE_USER_PROPS.tmp" "$GRADLE_USER_PROPS"
 
 log "[$APP_DIR] expo prebuild --platform android"
@@ -69,13 +76,21 @@ chmod +x "$APP_PATH/android/gradlew"
 # Kotlin-daemon JVM can add up past what's left and get the daemon killed
 # mid-build (Gradle's own low-memory self-check, or the OS OOM-killer) --
 # which looks like "the codespace just stopped"/"daemon disappeared" with
-# no real build error. Keep the main JVM capped low and leave real
-# headroom. GRADLE_OPTS/--no-daemon/--max-workers are honored directly by
-# the gradlew launcher regardless of what expo prebuild wrote into the
-# regenerated android/gradle.properties. If this still gets killed, close
-# any other terminals running `expo start`/Metro before retrying.
+# no real build error. --max-workers=1 (not 2) matters beyond just task
+# concurrency: AAPT2 runs its own separate worker-process pool for
+# resource/manifest compilation, sized off Gradle's own parallelism
+# setting, and that pool isn't bounded by GRADLE_OPTS at all -- on an app
+# with many native modules (e.g. multivendor-app's Firebase/Stripe/Sentry/
+# Google-Sign-In stack), several concurrent AAPT2 workers alone can tip an
+# 8GB box over, surfacing as "AAPT Process manager cannot be shut down
+# while daemons are in use" / "the daemon has disappeared". Fully serial
+# is slower but safe. GRADLE_OPTS/--no-daemon/--max-workers are honored
+# directly by the gradlew launcher regardless of what expo prebuild wrote
+# into the regenerated android/gradle.properties. If this still gets
+# killed, close any other terminals running `expo start`/Metro first --
+# they're competing for the same 8GB.
 export GRADLE_OPTS="-Xmx2g -XX:MaxMetaspaceSize=384m"
-GRADLE_MEMORY_FLAGS=(--no-daemon --max-workers=2)
+GRADLE_MEMORY_FLAGS=(--no-daemon --max-workers=1)
 
 log "[$APP_DIR] ./gradlew assembleDebug (this can take a while on first run)"
 (cd "$APP_PATH/android" && ./gradlew assembleDebug "${GRADLE_MEMORY_FLAGS[@]}")
