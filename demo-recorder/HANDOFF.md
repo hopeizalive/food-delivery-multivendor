@@ -8,7 +8,7 @@ that aren't obvious from the code alone.
 
 Build a narrated demo video of the full order lifecycle (customer places an
 order -> store accepts -> rider delivers) across the three Expo/React Native
-apps (`enatega-multivendor-app`, `-store`, `-rider`), driven against the
+apps (`multivendor-app`, `-store`, `-rider`), driven against the
 self-hosted mock GraphQL backend (`mock-api/`), for a client demo.
 
 ## Two automation approaches exist — use `adb-flows/`, not `flows/`
@@ -174,14 +174,14 @@ to respond in one measurement — slow enough to plausibly race the
 dev-client's internal timeout, especially under host CPU/memory contention
 (two Metro bundlers + emulator + Gradle daemon running simultaneously). The
 idle Gradle daemon (~1.66GB) has been stopped (`./gradlew --stop` in
-`enatega-multivendor-store/android/`) to reduce contention. Retesting the
+`multivendor-store/android/`) to reduce contention. Retesting the
 connect after that was in progress when this handoff was written — **check
 whether it's now reliable before assuming it's still broken**. If it's still
 flaky, the production-build fix above would sidestep it entirely.
 
 ## A real app bug was found and fixed this session
 
-**File**: `enatega-multivendor-store/i18next.ts` and `app/_layout.tsx`.
+**File**: `multivendor-store/i18next.ts` and `app/_layout.tsx`.
 
 **Symptom**: store app showed a real render crash (not just a warning) on
 the Home/Orders screen — `prevDeps.join is not a function (it is
@@ -242,9 +242,9 @@ right on the init-boundary at cold start.
 - App IDs: customer `com.enatega.multivendor`, store
   `multivendor.enatega.restaurant`, rider `com.enatega.multirider`.
 - Metro ports in use:
-  - Customer: `8081` (`npx expo start -c --port 8081` from `enatega-multivendor-app/`)
-  - Store: `8082` (`npx expo start -c --port 8082` from `enatega-multivendor-store/`)
-  - Rider: `8083` (`npx expo start -c --port 8083` from `enatega-multivendor-rider/`)
+  - Customer: `8081` (`npx expo start -c --port 8081` from `multivendor-app/`)
+  - Store: `8082` (`npx expo start -c --port 8082` from `multivendor-store/`)
+  - Rider: `8083` (`npx expo start -c --port 8083` from `multivendor-rider/`)
 - Demo credentials:
   - Customer: `demo@enatega.com` / `demo1234`
   - Store: `store-demo` / `demo1234`

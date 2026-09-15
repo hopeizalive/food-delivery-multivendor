@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository overview
 
-This is a monorepo of independent, separately-versioned frontend applications for the Enatega food/service delivery platform. Each top-level directory is its own npm project with its own `package.json`, `node_modules`, and deployment lifecycle — there is no root `package.json` or workspace tooling tying them together. The backend/API (`enatega-multivendor-api`) lives in a separate repository and is expected to be checked out as a sibling directory (`../enatega-multivendor-api`).
+This is a monorepo of independent, separately-versioned frontend applications for the Enatega food/service delivery platform. Each top-level directory is its own npm project with its own `package.json`, `node_modules`, and deployment lifecycle — there is no root `package.json` or workspace tooling tying them together. The backend/API (`multivendor-api`) lives in a separate repository and is expected to be checked out as a sibling directory (`../multivendor-api`).
 
 Apps:
 
-- `enatega-multivendor-admin` — Next.js (App Router) admin dashboard for the multivendor platform.
-- `enatega-multivendor-web` — Next.js (App Router) customer-facing ordering website.
-- `enatega-multivendor-app` — Expo/React Native customer mobile app.
-- `enatega-multivendor-rider` — Expo/React Native (expo-router) rider/delivery app.
-- `enatega-multivendor-store` — Expo/React Native (expo-router) vendor/restaurant management app.
-- `enatega-singlevendor-admin` — Next.js admin dashboard for single-vendor deployments.
+- `multivendor-admin` — Next.js (App Router) admin dashboard for the multivendor platform.
+- `multivendor-web` — Next.js (App Router) customer-facing ordering website.
+- `multivendor-app` — Expo/React Native customer mobile app.
+- `multivendor-rider` — Expo/React Native (expo-router) rider/delivery app.
+- `multivendor-store` — Expo/React Native (expo-router) vendor/restaurant management app.
+- `singlevendor-admin` — Next.js admin dashboard for single-vendor deployments.
 
 A root-level `lib/` (`api/graphql`, `utils/methods`) exists but is not currently imported by any app — treat it as early-stage/unwired scaffolding, not a shared package.
 
@@ -21,7 +21,7 @@ A root-level `lib/` (`api/graphql`, `utils/methods`) exists but is not currently
 
 Each app is run from its own directory (`cd <app-dir>` first). Node 18–20 is required; the Next.js apps pin `engines.node >= 20` and expect `npm` (not yarn).
 
-### enatega-multivendor-admin / enatega-multivendor-web / enatega-singlevendor-admin (Next.js)
+### multivendor-admin / multivendor-web / singlevendor-admin (Next.js)
 
 ```bash
 npm install
@@ -35,7 +35,7 @@ npm run cy:open              # open Cypress interactively
 npm run cy:run               # run Cypress headless
 ```
 
-`enatega-multivendor-web` additionally has Vitest unit tests:
+`multivendor-web` additionally has Vitest unit tests:
 
 ```bash
 npm test                     # vitest run
@@ -44,7 +44,7 @@ npm run test:watch           # vitest watch mode
 
 All three Next.js apps expose `npm run check:single-vendor-schema` (validates single-vendor GraphQL documents against a live schema — see "Vendor mode" below).
 
-### enatega-multivendor-app (Expo customer app, classic `src/` layout)
+### multivendor-app (Expo customer app, classic `src/` layout)
 
 ```bash
 npm install
@@ -67,7 +67,7 @@ npm run check:signed-media-url
 
 Build/submit via EAS: `npm run build:staging|development|production[:android|:ios]`, `npm run submit:production[:android|:ios]`.
 
-### enatega-multivendor-rider / enatega-multivendor-store (Expo Router, `app/` + `lib/` layout)
+### multivendor-rider / multivendor-store (Expo Router, `app/` + `lib/` layout)
 
 ```bash
 npm install
@@ -78,15 +78,15 @@ npm test                      # jest --watchAll (jest-expo preset)
 npm run check:single-vendor-schema
 ```
 
-`enatega-multivendor-store` also has `npm run check:single-vendor-auth`.
+`multivendor-store` also has `npm run check:single-vendor-auth`.
 
 To run a single Jest test in rider/store: `npx jest <path-or-name>` (drop `--watchAll`).
 
 ### Recommended local full-stack order
 
-1. Start the API from `../enatega-multivendor-api`.
-2. Start `enatega-multivendor-admin` or `enatega-multivendor-web`.
-3. Start the mobile app you need (`enatega-multivendor-app`, `-store`, or `-rider`).
+1. Start the API from `../multivendor-api`.
+2. Start `multivendor-admin` or `multivendor-web`.
+3. Start the mobile app you need (`multivendor-app`, `-store`, or `-rider`).
 
 ## Architecture
 
@@ -95,7 +95,7 @@ To run a single Jest test in rider/store: `npx jest <path-or-name>` (drop `--wat
 The platform ships two backend flavors — **single-vendor** (one restaurant/store per deployment) and **multivendor** (marketplace of many vendors) — but the customer app, rider app, store app, and web app are each a *single* codebase that can run in either mode, or let the user toggle between them at runtime. This is the central architectural fact of the repo; most non-trivial work touches it.
 
 - Deployment behavior is controlled by an env var (`EXPO_PUBLIC_VENDOR_MODE` for the Expo apps, `NEXT_PUBLIC_VENDOR_MODE` for the web app) set to `SINGLE`, `MULTI`, or `TOGGLE`. See [VENDOR_MODE_CONFIGURATION.md](VENDOR_MODE_CONFIGURATION.md) for the full deployment matrix and required companion env vars (e.g. `NEXT_PUBLIC_SINGLE_VENDOR_ENABLED` for web toggle builds).
-- In `enatega-multivendor-app`, single-vendor–specific screens, components, GraphQL documents, and stores live under `src/singlevendor/`, isolated from the multivendor code in `src/screens`, `src/components`, etc. Mode state/policy logic lives in `src/mode/` (`AppModeContext.js`, `constants.js`) — `AppModeContext` exposes `mode`, `switchMode`, `isModeToggleEnabled`, and mode-sensitive-operation guards (`beginModeSensitiveOperation`) that block switching mid-checkout/order.
+- In `multivendor-app`, single-vendor–specific screens, components, GraphQL documents, and stores live under `src/singlevendor/`, isolated from the multivendor code in `src/screens`, `src/components`, etc. Mode state/policy logic lives in `src/mode/` (`AppModeContext.js`, `constants.js`) — `AppModeContext` exposes `mode`, `switchMode`, `isModeToggleEnabled`, and mode-sensitive-operation guards (`beginModeSensitiveOperation`) that block switching mid-checkout/order.
 - The rider and store apps mirror this with a `lib/mode/` directory alongside their expo-router `app/` trees.
 - The `check:single-vendor-*` npm scripts in each app enforce this boundary at CI/pre-build time:
   - `check-single-vendor-imports.js` (app only) parses every file under `src/singlevendor` and fails if it imports something unresolvable, catching accidental leakage/coupling to multivendor-only modules.
@@ -109,7 +109,7 @@ The platform ships two backend flavors — **single-vendor** (one restaurant/sto
 
 - **Next.js apps** (`admin`, `web`, `singlevendor-admin`): App Router under `app/`, with route groups like `(localized)` and `(protected)`/`(unprotected)` encoding locale and auth requirements in the directory structure. Shared code (API clients, hooks, context, UI primitives, config) lives in `lib/` at the app root (`lib/api`, `lib/context`, `lib/hooks`, `lib/services`, `lib/states`, `lib/ui`, `lib/utils`). i18n strings live under `locales/` with routing config in `i18n/`.
 - **Expo Router apps** (`rider`, `store`): file-based routing under `app/`, business logic/shared code under `lib/` (`lib/apollo`, `lib/context`, `lib/hooks`, `lib/mode`, `lib/services`, `lib/ui`, `lib/utils`). Route groups like `(tabs)` and `(protected)`/`(un-protected)` mirror the Next.js convention.
-- **Classic Expo app** (`enatega-multivendor-app`): pre-expo-router layout — `src/screens`, `src/routes` (React Navigation), `src/components`, `src/context`, `src/apollo`, `src/api`, `src/services`, `src/ui`, `src/utils`, plus the isolated `src/singlevendor` tree described above.
+- **Classic Expo app** (`multivendor-app`): pre-expo-router layout — `src/screens`, `src/routes` (React Navigation), `src/components`, `src/context`, `src/apollo`, `src/api`, `src/services`, `src/ui`, `src/utils`, plus the isolated `src/singlevendor` tree described above.
 - All frontends talk to the API over Apollo GraphQL (queries/mutations/subscriptions), with `subscriptions-transport-ws` or `graphql-ws` for realtime (order tracking, chat, rider location).
 
 ### Cross-cutting notes

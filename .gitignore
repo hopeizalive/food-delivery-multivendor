@@ -69,7 +69,7 @@ web-build/
 # @end expo-cli
 graphify-out/
 .env
-enatega-multivendor-app/.env
+multivendor-app/.env
 goodbite-multivendor-app
 **/*service-account*.json
 **/serviceAccountKey*.json

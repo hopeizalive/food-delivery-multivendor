@@ -240,18 +240,18 @@ This section provides detailed instructions for setting up and running each comp
 
 | Module | Development | Production |
 | :--- | :--- | :--- |
-| API | `cd ../enatega-multivendor-api && npm install && npm run start:dev` | `cd ../enatega-multivendor-api && npm install && npm start` |
-| Admin | `cd enatega-multivendor-admin && nvm use && npm install && cp .env.example .env.local && npm run dev` | `cd enatega-multivendor-admin && nvm use && npm install && cp .env.example .env.local && npm run build && npm run start` |
-| Web | `cd enatega-multivendor-web && nvm use && npm install && cp .env.example .env.local && npm run dev` | `cd enatega-multivendor-web && nvm use && npm install && cp .env.example .env.local && npm run build && npm run start` |
-| Customer App | `cd enatega-multivendor-app && nvm use && npm install && npm run ios` or `npm run android` | `cd enatega-multivendor-app && nvm use && npm install && npm run build:production` |
-| Store App | `cd enatega-multivendor-store && nvm use && npm install && npm run ios` or `npm run android` | `cd enatega-multivendor-store && nvm use && npm install && eas build --profile production -p all` |
-| Rider App | `cd enatega-multivendor-rider && nvm use && npm install && npm run ios` or `npm run android` | `cd enatega-multivendor-rider && nvm use && npm install && eas build --profile production -p all` |
+| API | `cd ../multivendor-api && npm install && npm run start:dev` | `cd ../multivendor-api && npm install && npm start` |
+| Admin | `cd multivendor-admin && nvm use && npm install && cp .env.example .env.local && npm run dev` | `cd multivendor-admin && nvm use && npm install && cp .env.example .env.local && npm run build && npm run start` |
+| Web | `cd multivendor-web && nvm use && npm install && cp .env.example .env.local && npm run dev` | `cd multivendor-web && nvm use && npm install && cp .env.example .env.local && npm run build && npm run start` |
+| Customer App | `cd multivendor-app && nvm use && npm install && npm run ios` or `npm run android` | `cd multivendor-app && nvm use && npm install && npm run build:production` |
+| Store App | `cd multivendor-store && nvm use && npm install && npm run ios` or `npm run android` | `cd multivendor-store && nvm use && npm install && eas build --profile production -p all` |
+| Rider App | `cd multivendor-rider && nvm use && npm install && npm run ios` or `npm run android` | `cd multivendor-rider && nvm use && npm install && eas build --profile production -p all` |
 
 ### Recommended local full-stack order
 
-1. Start the API from `../enatega-multivendor-api`
-2. Start `enatega-multivendor-admin` or `enatega-multivendor-web`
-3. Start the mobile app you need from `enatega-multivendor-app`, `enatega-multivendor-store`, or `enatega-multivendor-rider`
+1. Start the API from `../multivendor-api`
+2. Start `multivendor-admin` or `multivendor-web`
+3. Start the mobile app you need from `multivendor-app`, `multivendor-store`, or `multivendor-rider`
 
 ### Enatega Admin Dashboard (Next.js)
 
@@ -259,7 +259,7 @@ The admin dashboard allows you to manage restaurants, orders, riders, and more.
 
 ```bash
 # Navigate to the admin dashboard directory
-cd enatega-multivendor-admin
+cd multivendor-admin
 
 # Install dependencies
 npm install
@@ -276,7 +276,7 @@ The customer web application allows users to browse restaurants and place orders
 
 ```bash
 # Navigate to the customer web directory
-cd enatega-multivendor-web
+cd multivendor-web
 
 # Install dependencies
 npm install
@@ -293,7 +293,7 @@ The customer mobile application allows users to browse restaurants and place ord
 
 ```bash
 # Navigate to the customer app directory
-cd enatega-multivendor-app
+cd multivendor-app
 
 # Install dependencies
 npm install
@@ -317,7 +317,7 @@ The rider app allows delivery personnel to manage and complete deliveries.
 
 ```bash
 # Navigate to the rider app directory
-cd enatega-multivendor-rider
+cd multivendor-rider
 
 # Install dependencies
 npm install
@@ -341,7 +341,7 @@ The restaurant app allows restaurant owners to manage orders and their menu.
 
 ```bash
 # Navigate to the restaurant app directory
-cd enatega-multivendor-restaurant
+cd multivendor-restaurant
 
 # Install dependencies
 npm install

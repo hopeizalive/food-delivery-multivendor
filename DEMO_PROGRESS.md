@@ -8,8 +8,8 @@ uncommitted working-tree state.
 
 The goal is to demo a full order lifecycle (customer orders → store accepts →
 rider delivers) to a potential client, using the real
-`enatega-multivendor-app` / `-store` / `-rider` apps. The real backend
-(`enatega-multivendor-api`) is a separate, unavailable/proprietary repo, and
+`multivendor-app` / `-store` / `-rider` apps. The real backend
+(`multivendor-api`) is a separate, unavailable/proprietary repo, and
 there are no demo credentials for Enatega's hosted servers (and no
 self-registration for store/rider accounts). So we built a self-hosted mock
 GraphQL backend (`mock-api/`) that speaks the exact contract the real apps
@@ -26,7 +26,7 @@ feeds into, is what backend we actually run on after the demo:
 
 1. **Check whether the template purchase includes API/backend support.**
    Enatega gives the app template for free but the backend
-   (`enatega-multivendor-api`) is separate/paid — we need to confirm with
+   (`multivendor-api`) is separate/paid — we need to confirm with
    them exactly what "purchasing" unlocks (hosted API access? source code
    license? support?) before assuming either path below.
 2. **If we purchase it:** we get Enatega's real, production-grade backend
@@ -103,7 +103,7 @@ mock API:
     (`react-native-keyboard-controller`). Windows' registry "long paths"
     setting did **not** fix it (the native `ninja.exe` toolchain isn't
     long-path aware). Fixed by mapping a short drive letter to the project
-    (`subst X: D:\dev\food-delivery-multivendor\enatega-multivendor-app`)
+    (`subst X: D:\dev\food-delivery-multivendor\multivendor-app`)
     and building from `X:\android` instead. **This subst mapping is
     session-only — it will need to be re-created (same command) after a
     reboot before rebuilding natively again.**
@@ -154,7 +154,7 @@ found/fixed while getting here is in `mock-api/SCHEMA_BUGS.md` (entries
 
 ## Bugs found and fixed in the actual app code (not just the mock API)
 
-These are real, pre-existing bugs in `enatega-multivendor-app`, found because
+These are real, pre-existing bugs in `multivendor-app`, found because
 this session is the first time multivendor mode has been run against a real
 backend locally:
 
@@ -276,10 +276,10 @@ mock-api/demo.sh stop
 
 # Customer app (native, Android emulator) - separate, not covered by demo.sh
 # One-time per reboot, before any native rebuild:
-#   (PowerShell) subst X: D:\dev\food-delivery-multivendor\enatega-multivendor-app
+#   (PowerShell) subst X: D:\dev\food-delivery-multivendor\multivendor-app
 cd /x/android && ./gradlew.bat app:assembleDebug -x lint -x test --build-cache -PreactNativeArchitectures=x86_64
 # then: start the emulator, adb install the APK, adb reverse tcp:8081 tcp:8081,
-# npx expo start -c from enatega-multivendor-app/, launch the app.
+# npx expo start -c from multivendor-app/, launch the app.
 
 # Reset demo data between rehearsals
 curl -s -X POST http://localhost:4000/graphql -H "Content-Type: application/json" -d '{"query":"mutation{ resetDemo }"}'
