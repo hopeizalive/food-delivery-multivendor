@@ -194,6 +194,17 @@ It's a debug-signed APK: installs fine for internal team testing via
 EAS `development`-profile build, since `expo-dev-client` is already a
 dependency of all three apps.
 
+It also caps Gradle's memory usage (`GRADLE_OPTS`, `--no-daemon`,
+`--max-workers=2`, plus a `kotlin.daemon.jvm.options` cap in
+`~/.gradle/gradle.properties`). Without this, the default free Codespaces
+machine (`basicLinux32gb`: 2 cores / 8GB RAM) can get **OOM-killed by the
+platform mid-build** — which looks like "the codespace just stopped" with
+no build error at all, since the kill happens outside the build process
+itself. If that ever happens again: `gh codespace list` /
+`gh codespace view -c <name>` shows the machine size and last-used/updated
+timestamps — a stop within a couple minutes of heavy build activity (not
+~30 min later, which would be the idle timeout instead) points at OOM.
+
 `serve-apks.sh [port]` (default port `9000`, already forwarded + set
 Public in `devcontainer.json`) generates a QR code per `.apk` in
 `dist/apks/` pointing at that file's Codespaces-forwarded download URL,
