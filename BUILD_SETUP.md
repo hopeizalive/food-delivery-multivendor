@@ -19,6 +19,7 @@ scripts/build-setup/
   setup-android.sh                  # one-time: JDK 21 + Android SDK, for local APK builds
   verify-android.sh                 # check the Android toolchain actually installed correctly
   build-apk.sh                      # build one app's debug .apk with Gradle (no EAS)
+  check-apks.sh                     # check whether all 3 debug APKs are built yet
   serve-apks.sh                     # serve dist/apks with a per-APK QR code for the team
   lib.sh                            # shared shell helpers
   env-templates/*.env               # .env template per app
@@ -164,6 +165,9 @@ bash scripts/build-setup/build-apk.sh multivendor-rider
 bash scripts/build-setup/build-apk.sh multivendor-store
 bash scripts/build-setup/build-apk.sh multivendor-app
 
+# confirm all three actually landed in dist/apks/ before serving
+bash scripts/build-setup/check-apks.sh
+
 # serve dist/apks/*.apk with a QR code per APK for the team to scan
 bash scripts/build-setup/serve-apks.sh
 ```
@@ -204,6 +208,11 @@ itself. If that ever happens again: `gh codespace list` /
 `gh codespace view -c <name>` shows the machine size and last-used/updated
 timestamps — a stop within a couple minutes of heavy build activity (not
 ~30 min later, which would be the idle timeout instead) points at OOM.
+
+`check-apks.sh` just checks `dist/apks/` for all three
+`<app>-debug.apk` files and reports size + build time for whichever exist,
+or the exact `build-apk.sh <app>` command for whichever don't — quick
+sanity check before serving.
 
 `serve-apks.sh [port]` (default port `9000`, already forwarded + set
 Public in `devcontainer.json`) generates a QR code per `.apk` in
