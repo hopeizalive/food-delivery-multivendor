@@ -24,10 +24,10 @@ PROFILE_SCRIPT="/etc/profile.d/android-sdk.sh"
 # apt on this image's Debian release (bullseye) doesn't carry openjdk-21 —
 # it only reached Debian from bookworm onward — so install Eclipse Temurin
 # 21 directly from its own release API instead of relying on apt at all.
-log "installing JDK 21 (Eclipse Temurin)"
+log "installing JDK 21 (Eclipse Temurin) — ~200MB download, this takes a bit"
 if [ ! -x "$JDK_HOME/bin/java" ]; then
   TMP_JDK_TAR="$(mktemp)"
-  curl -fsSL -o "$TMP_JDK_TAR" \
+  curl -fSL --progress-bar -o "$TMP_JDK_TAR" \
     "https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse?project=jdk"
   mkdir -p "$JDK_HOME"
   tar -xzf "$TMP_JDK_TAR" -C "$JDK_HOME" --strip-components=1
@@ -45,7 +45,7 @@ fi
 if [ ! -x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
   log "downloading Android command-line tools ($CMDLINE_TOOLS_VERSION)"
   TMP_ZIP="$(mktemp)"
-  curl -fsSL -o "$TMP_ZIP" \
+  curl -fSL --progress-bar -o "$TMP_ZIP" \
     "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip"
   mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
   rm -rf "$ANDROID_SDK_ROOT/cmdline-tools/latest"
@@ -62,13 +62,13 @@ export ANDROID_SDK_ROOT
 export ANDROID_HOME="$ANDROID_SDK_ROOT"
 export PATH="$JDK_HOME/bin:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
 
-log "accepting SDK licenses + installing platform-tools, platforms, build-tools"
-yes | sdkmanager --licenses >/dev/null
+log "accepting SDK licenses (output below is sdkmanager's own — normal, not stuck)"
+yes | sdkmanager --licenses
+log "installing platform-tools, platforms, build-tools — another few hundred MB, this also takes a bit"
 sdkmanager --install \
   "platform-tools" \
   "platforms;android-36" "build-tools;36.0.0" \
-  "platforms;android-35" "build-tools;35.0.0" \
-  >/dev/null
+  "platforms;android-35" "build-tools;35.0.0"
 
 log "writing $PROFILE_SCRIPT so ANDROID_HOME/PATH persist in every new shell"
 sudo tee "$PROFILE_SCRIPT" >/dev/null <<EOF
