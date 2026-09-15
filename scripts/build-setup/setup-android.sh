@@ -18,14 +18,28 @@ source "$SCRIPT_DIR/lib.sh"
 
 CMDLINE_TOOLS_VERSION="9862592" # matches Google's current repository2-1.xml
 ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$HOME/android-sdk}"
+JDK_HOME="${JDK_HOME:-$HOME/.jdk21}"
 PROFILE_SCRIPT="/etc/profile.d/android-sdk.sh"
 
-log "installing JDK 21"
-if ! java -version 2>&1 | grep -q '"21\.'; then
-  sudo apt-get update -qq
-  sudo apt-get install -y -qq openjdk-21-jdk
+# apt on this image's Debian release (bullseye) doesn't carry openjdk-21 —
+# it only reached Debian from bookworm onward — so install Eclipse Temurin
+# 21 directly from its own release API instead of relying on apt at all.
+log "installing JDK 21 (Eclipse Temurin)"
+if [ ! -x "$JDK_HOME/bin/java" ]; then
+  TMP_JDK_TAR="$(mktemp)"
+  curl -fsSL -o "$TMP_JDK_TAR" \
+    "https://api.adoptium.net/v3/binary/latest/21/ga/linux/x64/jdk/hotspot/normal/eclipse?project=jdk"
+  mkdir -p "$JDK_HOME"
+  tar -xzf "$TMP_JDK_TAR" -C "$JDK_HOME" --strip-components=1
+  rm -f "$TMP_JDK_TAR"
 else
-  log "JDK 21 already installed"
+  log "JDK 21 already installed at $JDK_HOME"
+fi
+
+if ! command -v unzip >/dev/null 2>&1; then
+  log "installing unzip"
+  sudo apt-get update -qq
+  sudo apt-get install -y -qq unzip
 fi
 
 if [ ! -x "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" ]; then
@@ -43,11 +57,10 @@ else
   log "Android command-line tools already installed"
 fi
 
-JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v java)")")")"
-export JAVA_HOME
+export JAVA_HOME="$JDK_HOME"
 export ANDROID_SDK_ROOT
 export ANDROID_HOME="$ANDROID_SDK_ROOT"
-export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
+export PATH="$JDK_HOME/bin:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH"
 
 log "accepting SDK licenses + installing platform-tools, platforms, build-tools"
 yes | sdkmanager --licenses >/dev/null
@@ -59,10 +72,10 @@ sdkmanager --install \
 
 log "writing $PROFILE_SCRIPT so ANDROID_HOME/PATH persist in every new shell"
 sudo tee "$PROFILE_SCRIPT" >/dev/null <<EOF
-export JAVA_HOME="$JAVA_HOME"
+export JAVA_HOME="$JDK_HOME"
 export ANDROID_SDK_ROOT="$ANDROID_SDK_ROOT"
 export ANDROID_HOME="$ANDROID_SDK_ROOT"
-export PATH="\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$ANDROID_SDK_ROOT/platform-tools:\$JAVA_HOME/bin:\$PATH"
+export PATH="\$JAVA_HOME/bin:\$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\$ANDROID_SDK_ROOT/platform-tools:\$PATH"
 EOF
 sudo chmod +x "$PROFILE_SCRIPT"
 
