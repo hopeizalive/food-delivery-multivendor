@@ -57,6 +57,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'assets.enatega.com',
+      },
+      {
+        // Demo image host used by the local mock-api (mock-api/src/data.js)
+        // for seeded restaurant/vendor/cuisine images.
+        protocol: 'https',
+        hostname: 'picsum.photos',
       }
     ], // Add placehold.co as an allowed domain
   },

@@ -410,3 +410,48 @@ Then run:
 ```bash
 eas build --platform ios --profile development
 ```
+
+---
+
+## 📲 Local Network APK Download Server & Multi-App Runner
+
+A lightweight local distribution and development framework allowing smartphones on your local Wi-Fi / Hotspot to download pre-built APKs and connect directly to running Expo Metro bundlers.
+
+### 1. Launch All Apps & APK Download Server
+Run this one command from the project root in PowerShell:
+```powershell
+.\start-all-apps.ps1
+```
+* **Auto-detects your local IP** (e.g. `10.13.0.44`).
+* **Starts the Local APK Download Server** on port `8080` (serving `dist/apks`).
+* **Starts all 3 Expo Metro Bundlers** in parallel:
+  * 🍔 Customer App: Port `8081` (`multivendor-app`)
+  * 🏪 Store App: Port `8082` (`multivendor-store`)
+  * 🛵 Rider App: Port `8083` (`multivendor-rider`)
+* **Expo Tunnel Mode (Optional):** Run `.\start-all-apps.ps1 -Tunnel` to start Expo with ngrok cloud tunnels if local LAN is unavailable.
+
+### 2. Downloading APKs Directly to Your Phone
+Open Chrome (or any mobile browser) on your phone and visit:
+```text
+http://<YOUR_PC_IP>:8080
+```
+*(e.g. `http://10.13.0.44:8080`)*
+
+**Features:**
+* Direct 1-tap download buttons for:
+  * `multivendor-app-debug.apk` (Customer App — 229 MB)
+  * `multivendor-rider-debug.apk` (Rider App — 202 MB)
+  * `multivendor-store-debug.apk` (Store App — 211 MB)
+* Supports HTTP Range requests (`206 Partial Content`) for ultra-fast, multi-chunk, resumable downloads over Wi-Fi.
+* Logs incoming phone connections and downloads live in the terminal.
+
+### 3. Demo Accounts & Default Credentials
+
+| App | Role | Username / Email | Password |
+| :--- | :--- | :--- | :--- |
+| 🍔 **Customer App** | Customer | `demo@enatega.com` | `demo1234` |
+| 🏪 **Store App** | Merchant | `store-demo` | `demo1234` |
+| 🛵 **Rider App** | Delivery Rider | `rider-demo` | `demo1234` |
+| 💻 **Admin Dashboard** | Super Admin | `admin-demo@enatega.com` | `demo1234` |
+
+> **Note:** In the Customer App, choose **Demo Bistro** to test the full end-to-end order lifecycle.

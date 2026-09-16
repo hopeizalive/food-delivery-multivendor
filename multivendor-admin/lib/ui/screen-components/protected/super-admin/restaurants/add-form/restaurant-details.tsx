@@ -129,6 +129,13 @@ export default function RestaurantDetailsForm({
   // Mutation
   const [createRestaurant] = useMutation(CREATE_RESTAURANT, {
     onError,
+    // The Stores table (GET_RESTAURANTS_PAGINATED) has no other way to learn
+    // a new restaurant exists - `update` above only patches the unrelated
+    // GET_RESTAURANTS query (used just for the duplicate-name check on this
+    // form), and unlike the delete flow (which calls refetch() explicitly)
+    // nothing here refetches the paginated list. Without this, a newly
+    // created store never appears until the page is manually reloaded.
+    refetchQueries: ['restaurantsPaginated'],
     onCompleted: ({
       createRestaurant,
     }: {

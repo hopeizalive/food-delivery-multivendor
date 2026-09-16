@@ -9,6 +9,11 @@
 # testing
 /coverage
 
+# Playwright output (test-results/ = traces/screenshots on failure,
+# playwright-report/ = the HTML report) - regenerated per run, never committed.
+/test-results
+/playwright-report
+
 .env
 
 # next.js
