@@ -12,9 +12,20 @@ export const CouponFormSchema = Yup.object().shape({
     .max(100, 'You cannot exceed from 100 as this is a %age field'),
   enabled: Yup.boolean().required('Required').required('Please choose one'),
   lifeTimeActive: Yup.boolean(),
-  endDate: Yup.date().when('lifeTimeActive', {
-    is: false,
-    then: (schema) => schema.required('End Date is required'),
-    otherwise: (schema) => schema.notRequired(),
-  }),
+  // Transform is required because the underlying field is a native
+  // `<input type="date">` (see coupons/form/index.tsx), which yields ''
+  // rather than undefined when empty - Yup.date().notRequired() only skips
+  // the presence check, not the type cast, so '' was still failing the
+  // `date` cast and silently blocking submission whenever lifeTimeActive
+  // was true (the form has no <ErrorMessage> wired for endDate, so this was
+  // invisible in the UI - every "lifetime" coupon create was silently a no-op).
+  endDate: Yup.date()
+    .transform((value, originalValue) =>
+      originalValue === '' ? undefined : value
+    )
+    .when('lifeTimeActive', {
+      is: false,
+      then: (schema) => schema.required('End Date is required'),
+      otherwise: (schema) => schema.notRequired(),
+    }),
 });

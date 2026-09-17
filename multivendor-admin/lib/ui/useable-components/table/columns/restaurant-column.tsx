@@ -42,6 +42,11 @@ export const RESTAURANT_TABLE_COLUMNS = ({
 
   // API
   const [deleteRestaurant] = useMutation(DELETE_RESTAURANT, {
+    // No `update` here, and the mutation response only carries {_id, isActive}
+    // - normalized cache merge alone wasn't reliably flipping the row's
+    // switch (unlike the rider availability toggle, which refetches
+    // explicitly). Match that working pattern instead of trusting merge.
+    refetchQueries: ['restaurantsPaginated', 'getClonedRestaurantsPaginated'],
     onCompleted: () => {
       showToast({
         type: 'success',

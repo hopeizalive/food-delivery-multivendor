@@ -1,24 +1,57 @@
 'use client';
-import React, { useState } from 'react';
-import { useQuery } from '@apollo/client';
+import React, { useContext, useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
 import { GET_AUDIT_LOGS } from '@/lib/api/graphql/queries/audit';
+import { RESET_DEMO } from '@/lib/api/graphql/mutations/reset-demo';
 import AuditLogCard, {
   AuditLog,
 } from '@/lib/ui/screen-components/protected/super-admin/audit-logs/AuditLogCard';
 import HeaderText from '@/lib/ui/useable-components/header-text';
+import { CustomDialog } from '@/lib/ui/useable-components/custom-dialog';
 import { Paginator, PaginatorPageChangeEvent } from 'primereact/paginator';
 import { Skeleton } from 'primereact/skeleton';
 import { Card } from 'primereact/card';
+import { InputText } from 'primereact/inputtext';
+import { Button } from 'primereact/button';
 import { useTranslations } from 'next-intl';
+import { ToastContext } from '@/lib/context/global/toast.context';
+import useDebounce from '@/lib/hooks/useDebounce';
 
 const AuditLogScreen = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [searchValue, setSearchValue] = useState('');
+  const [resetDialogVisible, setResetDialogVisible] = useState(false);
+  const debouncedSearch = useDebounce(searchValue, 500);
   const t = useTranslations();
+  const { showToast } = useContext(ToastContext);
 
-  const { data, loading, error } = useQuery(GET_AUDIT_LOGS, {
-    variables: { page: currentPage, limit },
+  const { data, loading, error, refetch } = useQuery(GET_AUDIT_LOGS, {
+    variables: { page: currentPage, limit, search: debouncedSearch || undefined },
     fetchPolicy: 'cache-and-network',
+  });
+
+  const [resetDemo, { loading: resetLoading }] = useMutation(RESET_DEMO, {
+    onCompleted: () => {
+      setResetDialogVisible(false);
+      showToast({
+        type: 'success',
+        title: t('Reset Demo'),
+        message: t('Demo data has been reset'),
+        duration: 3000,
+      });
+      setCurrentPage(1);
+      refetch();
+    },
+    onError: (err) => {
+      setResetDialogVisible(false);
+      showToast({
+        type: 'error',
+        title: t('Reset Demo'),
+        message: err.message,
+        duration: 3000,
+      });
+    },
   });
 
   const onPageChange = (event: PaginatorPageChangeEvent) => {
@@ -60,12 +93,47 @@ const AuditLogScreen = () => {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="mb-6">
-        <HeaderText text={t('Audit Logs')} />
-        <p className="text-gray-500 dark:text-white mt-1">
-          {t('audit_log_header_desc')}
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <HeaderText text={t('Audit Logs')} />
+          <p className="text-gray-500 dark:text-white mt-1">
+            {t('audit_log_header_desc')}
+          </p>
+        </div>
+        <Button
+          label={t('Reset Demo')}
+          severity="danger"
+          outlined
+          onClick={() => setResetDialogVisible(true)}
+        />
       </div>
+
+      <div className="mb-4">
+        <span className="p-input-icon-left w-full sm:w-80">
+          <InputText
+            className="w-full"
+            placeholder={t('Search logs')}
+            value={searchValue}
+            onChange={(e) => {
+              setSearchValue(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </span>
+      </div>
+
+      <CustomDialog
+        visible={resetDialogVisible}
+        onHide={() => setResetDialogVisible(false)}
+        onConfirm={() => resetDemo()}
+        title={t('Reset Demo')}
+        message={t('reset_demo_confirm_message')}
+        loading={resetLoading}
+        buttonConfig={{
+          primaryButtonProp: { label: t('Confirm'), className: 'p-button-danger' },
+          secondaryButtonProp: { label: t('Cancel') },
+        }}
+      />
 
       <div className="bg-white dark:bg-dark-950 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-dark-600">
         <div className="h-[calc(100vh-280px)] overflow-y-auto pr-2">
